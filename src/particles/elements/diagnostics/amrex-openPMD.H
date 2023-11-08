@@ -1,0 +1,210 @@
+/* Copyright 2022-2023 The Regents of the University of California, through Lawrence
+ *           Berkeley National Laboratory (subject to receipt of any required
+ *           approvals from the U.S. Dept. of Energy). All rights reserved.
+ *
+ * This file is part of ImpactX.
+ *
+ * Authors: Junmin Gu
+ * License: BSD-3-Clause-LBNL
+ */
+#ifndef IMPACTX_ELEMENTS_DIAGS_OPENPMD_WITH_AMREX_H
+#define IMPACTX_ELEMENTS_DIAGS_OPENPMD_WITH_AMREX_H
+
+#include "particles/elements/mixin/thin.H"
+#include "particles/ImpactXParticleContainer.H"
+
+#include <AMReX_PlotFileUtil.H> // for AMReXWithOpenPMD  
+#include <AMReX_Extension.H>
+#include <AMReX_REAL.H>
+
+#include <any>
+
+
+namespace impactx::diagnostics
+{
+  class AMReX_impactxWriter: public amrex::openpmd_api::AMReX_openPMDWriter
+  {
+  public:
+    AMReX_impactxWriter(openPMD::IterationEncoding ie =  openPMD::IterationEncoding::variableBased,
+			std::string filetype = "default",
+			std::string openpmdOptions = "{}")
+      :AMReX_openPMDWriter("{impactX}", ie, filetype, openpmdOptions)
+    {};
+    
+
+    // subclasses
+    inline std::vector< std::string > getParticlePositionComponentLabels() const
+    {
+      using vs = std::vector< std::string >;
+      vs const positionComponents{"x", "y", "t"};
+      return positionComponents;
+    }
+    // internal  to impact x
+    /** Prepare entering the element before starting push logic.
+     *
+     * @param[in] pc particle container
+     * @param[in] ref_part reference particle
+     * @param[in] step global step for diagnostics
+     */
+    void SetConstantRefPart (openPMD::ParticleSpecies& beam,
+			     const unsigned long long& np,
+			     RefPart const & ref_part
+			     )
+    {
+      // beam mass
+        beam.setAttribute( "mass", ref_part.mass );
+        beam.setAttribute( "beta_ref", ref_part.beta() );
+        beam.setAttribute( "gamma_ref", ref_part.gamma() );
+    	
+	beam["positionOffset"]["x"].makeConstant( ref_part.x );
+	beam["positionOffset"]["y"].makeConstant( ref_part.y );
+	beam["positionOffset"]["t"].makeConstant( ref_part.t );
+	
+    }
+
+    template<class PIt>
+    void Save_impactx_PosID(PIt& pti,
+			    openPMD::ParticleSpecies& currSpecies,
+			    unsigned long long offset) const
+    {
+      //  use default is enough I guess?
+      SavePosId(pti, currSpecies, offset);
+    }
+
+    void
+    GetNames(amrex::Vector<std::string>& real_names,
+	     amrex::Vector<std::string>& int_names,
+	     amrex::Vector<int>& int_flags,
+	     amrex::Vector<int>& real_flags) const
+
+    {
+      real_names.resize(RealSoA::names_s.size());
+      std::copy(RealSoA::names_s.begin(), RealSoA::names_s.end(), real_names.begin());
+
+      amrex::Print() <<" => [check] real names from RealSoA::names_s  size="<<real_names.size()<<std::endl;
+      for (auto n: real_names)
+	amrex::Print()<<" => "<<n<<std::endl;
+      
+      for (auto real_idx=0; real_idx < RealSoA::nattribs; real_idx++) {
+	auto const component_name = real_names.at(real_idx);
+	amrex::Print() <<"   => [check]  comp: "<<component_name<<std::endl;
+      }
+
+      real_flags.resize(real_names.size(), 1);
+
+      amrex::Print() <<" => [check] int names ?  "<<std::endl;
+    }
+    
+  };  // class impactxWriter
+  
+
+
+
+class AMReXWithOpenPMD
+{
+public:
+  AMReXWithOpenPMD();
+
+  AMReXWithOpenPMD(AMReXWithOpenPMD const & other) = default;
+  AMReXWithOpenPMD (AMReXWithOpenPMD && other) = default;
+  AMReXWithOpenPMD& operator= (AMReXWithOpenPMD const & other) = default;
+  AMReXWithOpenPMD& operator= (AMReXWithOpenPMD && other) = default;
+
+  ~AMReXWithOpenPMD();
+
+  void SetWriter(amrex::openpmd_api::AMReX_openPMDWriter* w);
+
+  bool InitLocalHandler(const std::string& prefix);
+
+  std::unique_ptr<amrex::openpmd_api::AMReX_openPMDHandler> m_UserHandler;
+
+private:
+  std::string m_Prefix = "";
+};
+
+
+  
+  
+    /** This element writes the particle beam out to openPMD data.
+     *
+     * This class behaves like a singleton if constructed with the
+     * same series name as an existing instance.
+     */
+    struct BeamMonitor
+    : public elements::Thin
+    {
+        static constexpr auto name = "BeamMonitor";
+        using PinnedContainer = typename ImpactXParticleContainer::ContainerLike<amrex::PinnedArenaAllocator>;
+
+        /** This element writes the particle beam out to openPMD data.
+         *
+         * Elements with the same series name are identical.
+         *
+         * @param series_name name of the data series, usually the element name
+         * @param backend file format backend for openPMD, e.g., "bp" or "h5"
+         * @param encoding openPMD iteration encoding: "v"ariable based, "f"ile based, "g"roup based (default)
+         */
+        BeamMonitor (std::string series_name, std::string backend="default", std::string encoding="g");
+
+        BeamMonitor (BeamMonitor const & other) = default;
+        BeamMonitor (BeamMonitor && other) = default;
+        BeamMonitor& operator= (BeamMonitor const & other) = default;
+        BeamMonitor& operator= (BeamMonitor && other) = default;
+
+        /** Prepare entering the element before starting push logic.
+         *
+         * @param[in] pc particle container
+         * @param[in] ref_part reference particle
+         * @param[in] step global step for diagnostics
+         */
+        void prepare (
+            PinnedContainer & pc,
+            RefPart const & ref_part,
+            int step
+        );
+
+        /** Dump all particles.
+         *
+         * Particles are relative to the reference particle.
+         *
+         * @param[in,out] pc particle container to push
+         * @param[in] step global step for diagnostics
+         */
+        void operator() (
+            ImpactXParticleContainer & pc,
+            int step
+        );
+
+      /*
+        // TODO: move to private function
+        void operator() (
+            PinnedContainer::ParIterType & pti,
+            RefPart const & ref_part
+        );
+      */
+        /** This does nothing to the reference particle. */
+        using Thin::operator();
+
+        /** track all m_series_name instances
+         *
+         * Ensure m_series is the same for the same name.
+         */
+      // static inline std::map<std::string, std::any> m_unique_series = {};
+
+        /** Close and deallocate all data series and backends.
+         */
+        void
+        finalize ();
+
+    private:
+      //std::unique_ptr< AMReXWithOpenPMD > m_Writer = std::make_unique< AMReXWithOpenPMD >();
+      void*  m_plotWriter = NULL;
+      //std::unique_ptr< AMReXWithOpenPMD > m_Writer;
+      //std::any  m_Writer;
+
+      //int m_file_min_digits = 6; //! minimum number of digits to iteration number in file name      
+    };
+
+} // namespace impactx::diagnostics
+
+#endif // IMPACTX_ELEMENTS_DIAGS_OPENPMD_WITH_AMREX_H
