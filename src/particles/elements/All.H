@@ -33,7 +33,9 @@
 #include "PRot.H"
 #include "SoftSol.H"
 #include "SoftQuad.H"
-#include "diagnostics/openPMD.H"
+//#include "diagnostics/openPMD.H"
+#include "diagnostics/amrex-openPMD.H"
+
 
 #include <variant>
 

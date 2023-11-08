@@ -1,4 +1,5 @@
 target_sources(lib
   PRIVATE
-    openPMD.cpp
+#    openPMD.cpp
+    amrex-openPMD.cpp
 )
