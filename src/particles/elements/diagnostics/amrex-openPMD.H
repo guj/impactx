@@ -52,9 +52,19 @@ namespace impactx::diagnostics
 			     )
     {
       // beam mass
-        beam.setAttribute( "mass", ref_part.mass );
         beam.setAttribute( "beta_ref", ref_part.beta() );
         beam.setAttribute( "gamma_ref", ref_part.gamma() );
+        beam.setAttribute( "s_ref", ref_part.s );
+        beam.setAttribute( "x_ref", ref_part.x );
+        beam.setAttribute( "y_ref", ref_part.y );
+        beam.setAttribute( "z_ref", ref_part.z );
+        beam.setAttribute( "t_ref", ref_part.t );
+        beam.setAttribute( "px_ref", ref_part.px );
+        beam.setAttribute( "py_ref", ref_part.py );
+        beam.setAttribute( "pz_ref", ref_part.pz );
+        beam.setAttribute( "pt_ref", ref_part.pt );
+        beam.setAttribute( "mass", ref_part.mass );
+        beam.setAttribute( "charge", ref_part.charge );
     	
 	beam["positionOffset"]["x"].makeConstant( ref_part.x );
 	beam["positionOffset"]["y"].makeConstant( ref_part.y );
