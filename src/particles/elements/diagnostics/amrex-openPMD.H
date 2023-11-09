@@ -29,7 +29,7 @@ namespace impactx::diagnostics
 			std::string filetype = "default",
 			std::string openpmdOptions = "{}")
       :AMReX_openPMDWriter("{impactX}", ie, filetype, openpmdOptions)
-    {};
+    {}
     
 
     // subclasses
@@ -91,18 +91,27 @@ namespace impactx::diagnostics
       real_names.resize(RealSoA::names_s.size());
       std::copy(RealSoA::names_s.begin(), RealSoA::names_s.end(), real_names.begin());
 
-      amrex::Print() <<" => [check] real names from RealSoA::names_s  size="<<real_names.size()<<std::endl;
-      for (auto n: real_names)
-	amrex::Print()<<" => "<<n<<std::endl;
-      
       for (auto real_idx=0; real_idx < RealSoA::nattribs; real_idx++) {
 	auto const component_name = real_names.at(real_idx);
-	amrex::Print() <<"   => [check]  comp: "<<component_name<<std::endl;
       }
-
       real_flags.resize(real_names.size(), 1);
 
-      amrex::Print() <<" => [check] int names ?  "<<std::endl;
+
+      // currently no use of int names
+      int_names.resize(0);
+      int_flags.resize(0);
+
+      /*
+	// enable when IntSoA is in
+      amrex::Print() <<" => [check] int names ?  "<<IntSoA::names_s.size()<<std::endl;
+      int_names.resize(IntSoA::names_s.size());
+      std::copy(IntSoA::names_s.begin(), IntSoA::names_s.end(), int_names.begin());
+
+      for (auto int_idx=0; int_idx < IntSoA::nattribs; int_idx++) {
+	auto const component_name = int_names.at(int_idx);
+      }
+      int_flags.resize(int_names.size(), 1);
+      */
     }
     
   };  // class impactxWriter
