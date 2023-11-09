@@ -47,7 +47,7 @@ namespace impactx::diagnostics
      * @param[in] step global step for diagnostics
      */
     void SetConstantRefPart (openPMD::ParticleSpecies& beam,
-			     const unsigned long long& np,
+			     //const unsigned long long& np,
 			     RefPart const & ref_part
 			     )
     {

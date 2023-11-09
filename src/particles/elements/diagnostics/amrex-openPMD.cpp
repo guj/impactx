@@ -18,14 +18,7 @@
 #include <AMReX_REAL.H>
 #include <AMReX_ParmParse.H>
 
-/*
-#ifdef ImpactX_USE_OPENPMD
-#   include <openPMD/openPMD.hpp>
-namespace io = openPMD;
-#endif
-*/
 #include <utility>
-
 
 #include "amrex-openPMD.H"
 
@@ -168,27 +161,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         int step
     ) {      
 #ifdef ImpactX_USE_OPENPMD
-
-     
-#ifdef MOVED_TO_SetConstantRefPart
-        // beam mass
-        beam.setAttribute( "mass", ref_part.mass );
-        beam.setAttribute( "beta_ref", ref_part.beta() );
-        beam.setAttribute( "gamma_ref", ref_part.gamma() );
-
-        // openPMD coarse position
-        {
-            beam["positionOffset"]["x"].resetDataset(d_fl);
-            beam["positionOffset"]["x"].makeConstant(ref_part.x);
-            beam["positionOffset"]["y"].resetDataset(d_fl);
-            beam["positionOffset"]["y"].makeConstant(ref_part.y);
-            beam["positionOffset"]["t"].resetDataset(d_fl);
-            beam["positionOffset"]["t"].makeConstant(ref_part.t);
-        }
-
-        // AoS: Int
-        beam["id"][scalar].resetDataset(d_ui);
-#endif
+    
 	/* should be covered by amrex-openpmd-io
         // SoA: Real
         {
@@ -255,7 +228,8 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
 
 						       [=] (auto& ppc, openPMD::ParticleSpecies& currSpecies, unsigned long long localTotal)
 						       {
-							 impactxWriter->SetConstantRefPart(currSpecies, localTotal, ref_part);
+							 //impactxWriter->SetConstantRefPart(currSpecies, localTotal, ref_part);
+							 impactxWriter->SetConstantRefPart(currSpecies,  ref_part);
 						       },
 						       [=] (auto& pti, openPMD::ParticleSpecies& currSpecies, unsigned long long offset)
 						       {
