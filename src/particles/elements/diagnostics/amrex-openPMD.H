@@ -13,7 +13,7 @@
 #include "particles/elements/mixin/thin.H"
 #include "particles/ImpactXParticleContainer.H"
 
-#include <AMReX_PlotFileUtil.H> // for AMReXWithOpenPMD  
+#include <AMReX_PlotFileUtil.H> // for AMReXWithOpenPMD
 #include <AMReX_Extension.H>
 #include <AMReX_REAL.H>
 
@@ -30,7 +30,7 @@ namespace impactx::diagnostics
 			std::string openpmdOptions = "{}")
       :AMReX_openPMDWriter("{impactX}", ie, filetype, openpmdOptions)
     {}
-    
+
 
     // subclasses
     inline std::vector< std::string > getParticlePositionComponentLabels() const
@@ -65,11 +65,11 @@ namespace impactx::diagnostics
         beam.setAttribute( "pt_ref", ref_part.pt );
         beam.setAttribute( "mass", ref_part.mass );
         beam.setAttribute( "charge", ref_part.charge );
-    	
+
 	beam["positionOffset"]["x"].makeConstant( ref_part.x );
 	beam["positionOffset"]["y"].makeConstant( ref_part.y );
 	beam["positionOffset"]["t"].makeConstant( ref_part.t );
-	
+
     }
 
     template<class PIt>
@@ -92,7 +92,7 @@ namespace impactx::diagnostics
       std::copy(RealSoA::names_s.begin(), RealSoA::names_s.end(), real_names.begin());
 
       for (auto real_idx=0; real_idx < RealSoA::nattribs; real_idx++) {
-	auto const component_name = real_names.at(real_idx);
+	       auto const component_name = real_names.at(real_idx);
       }
       real_flags.resize(real_names.size(), 1);
 
@@ -113,9 +113,9 @@ namespace impactx::diagnostics
       int_flags.resize(int_names.size(), 1);
       */
     }
-    
+
   };  // class impactxWriter
-  
+
 
 
 
@@ -124,9 +124,9 @@ class AMReXWithOpenPMD
 public:
   AMReXWithOpenPMD();
 
-  AMReXWithOpenPMD(AMReXWithOpenPMD const & other) = default;
+    //AMReXWithOpenPMD(AMReXWithOpenPMD const & other) = default;
   AMReXWithOpenPMD (AMReXWithOpenPMD && other) = default;
-  AMReXWithOpenPMD& operator= (AMReXWithOpenPMD const & other) = default;
+    //AMReXWithOpenPMD& operator= (AMReXWithOpenPMD const & other) = default;
   AMReXWithOpenPMD& operator= (AMReXWithOpenPMD && other) = default;
 
   ~AMReXWithOpenPMD();
@@ -142,8 +142,8 @@ private:
 };
 
 
-  
-  
+
+
     /** This element writes the particle beam out to openPMD data.
      *
      * This class behaves like a singleton if constructed with the
@@ -221,7 +221,7 @@ private:
       //std::unique_ptr< AMReXWithOpenPMD > m_Writer;
       //std::any  m_Writer;
 
-      //int m_file_min_digits = 6; //! minimum number of digits to iteration number in file name      
+      //int m_file_min_digits = 6; //! minimum number of digits to iteration number in file name
     };
 
 } // namespace impactx::diagnostics

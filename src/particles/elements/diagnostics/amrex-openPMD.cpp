@@ -51,21 +51,21 @@ private:
     // warpx has multiple diags, each should maintain its own handler
     m_UserHandler = amrex::openpmd_api::InitUserHandler(m_Prefix);
   }
-  
+
   void AMReXWithOpenPMD::SetWriter(amrex::openpmd_api::AMReX_openPMDWriter* w)
   {
     BL_ASSERT ( m_UserHandler != nullptr );
     BL_ASSERT ( w != nullptr );
-    
+
     // so the openpmd filepath assigned from input file is still in use
     w->m_openPMDPrefix = m_UserHandler->m_Writer->m_openPMDPrefix;
     w->m_openPMDEncoding = m_UserHandler->m_Writer->m_openPMDEncoding;
     w->m_openPMDFileType = m_UserHandler->m_Writer->m_openPMDFileType;
     w->m_openPMDSeriesOptions = m_UserHandler->m_Writer->m_openPMDSeriesOptions;
-    
+
     m_UserHandler->m_Writer.reset(w);
   }
-  
+
 
   AMReXWithOpenPMD::~AMReXWithOpenPMD()
 {
@@ -96,7 +96,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
 	delete m_Writer;
       }
       amrex::Print()<<" => [check]: is things in BeamMonitor::finalize() addressed? \n";
-      /*      
+      /*
         // close shared series alias
         if (m_series.has_value())
         {
@@ -115,8 +115,6 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
     {
       auto m_Writer =  new AMReXWithOpenPMD();
 #ifdef ImpactX_USE_OPENPMD
-        // pick first available backend if default is chosen
-      amrex::Print() <<" ==> [check:] what happends if backend is set  to be as _default_ \n";
         // encoding of iterations in the series
         openPMD::IterationEncoding series_encoding = openPMD::IterationEncoding::groupBased;
         if ( "v" == encoding )
@@ -126,29 +124,11 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         else if ( "f" == encoding )
             series_encoding = openPMD::IterationEncoding::fileBased;
 
-	//auto ixWriter  = AMReXWithOpenPMD();
-	//auto ixWriter = std::any_cast<AMReXWithOpenPMD>(m_Writer);
 	if ( m_Writer->InitLocalHandler(series_name) )
 	  {
-	    AMReX_impactxWriter* testWriter = new AMReX_impactxWriter(series_encoding);	  
+	    AMReX_impactxWriter* testWriter = new AMReX_impactxWriter(series_encoding);
 	    m_Writer->SetWriter(testWriter);
 	  }
-       	
-	amrex::Print()<<" ==> [check:] is using "<<series_name<<" the right prefix for specifing encoding etc in input file? \n";
-	amrex::Print()<<" Double check the following code are covered \n";
-	
-        // legacy options from other diagnostics
-        //amrex::ParmParse pp_diag("diag");
-        //pp_diag.queryAdd("file_min_digits", m_file_min_digits);
-	/*
-        // Ensure m_series is the same for the same names.
-        if (m_unique_series.count(m_series_name) == 0u) {
-            std::string filepath = "diags/openPMD/";
-            filepath.append(m_series_name);
-
-	    }
-	    .....
-	*/
 #else
         amrex::AllPrint() << "Warning: openPMD output requested but not compiled for series=" << m_series_name << "\n";
 #endif
@@ -159,9 +139,9 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         PinnedContainer & pc,
         RefPart const & ref_part,
         int step
-    ) {      
+    ) {
 #ifdef ImpactX_USE_OPENPMD
-    
+
 	/* should be covered by amrex-openpmd-io
         // SoA: Real
         {
@@ -226,10 +206,10 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
 						       real_names,
 						       int_names,
 
-						       [=] (auto& ppc, openPMD::ParticleSpecies& currSpecies, unsigned long long localTotal)
+						       [=] ([[maybe_unused]] auto& ppc, openPMD::ParticleSpecies& currSpecies, [[maybe_unused]]  unsigned long long localTotal)
 						       {
 							 //impactxWriter->SetConstantRefPart(currSpecies, localTotal, ref_part);
-							 impactxWriter->SetConstantRefPart(currSpecies,  ref_part);
+							      impactxWriter->SetConstantRefPart(currSpecies,  ref_part);
 						       },
 						       [=] (auto& pti, openPMD::ParticleSpecies& currSpecies, unsigned long long offset)
 						       {
@@ -237,7 +217,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
 							 impactxWriter->Save_impactx_PosID(pti, currSpecies, offset);
 						       });
 
-	
+
       // prepare element access
       //this->prepare(pinned_pc, ref_part, step);
     }
