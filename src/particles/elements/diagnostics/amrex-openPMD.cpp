@@ -135,6 +135,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
 	m_plotWriter = m_Writer;
     }
 
+  #ifdef NEVER
     void BeamMonitor::prepare (
         PinnedContainer & pc,
         RefPart const & ref_part,
@@ -159,7 +160,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         amrex::ignore_unused(pc, step);
 #endif
     }
-
+#endif
     void
     BeamMonitor::operator() (
         ImpactXParticleContainer & pc,
@@ -218,104 +219,5 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
 						       });
 
 
-      // prepare element access
-      //this->prepare(pinned_pc, ref_part, step);
     }
-
-/*
-
-    void
-    BeamMonitor::operator() (
-        PinnedContainer::ParIterType & pti,
-        RefPart const & ref_part
-    )
-    {
-#ifdef ImpactX_USE_OPENPMD
-        int const currentLevel = pti.GetLevel();
-
-        auto & offset = m_offset.at(currentLevel); // ...
-
-        // preparing access to particle data: AoS
-        auto& aos = pti.GetArrayOfStructs();
-
-        // series & iteration
-        auto series = std::any_cast<io::Series>(m_series);
-        io::WriteIterations iterations = series.writeIterations();
-        io::Iteration iteration = iterations[m_step];
-
-        // writing
-        io::ParticleSpecies beam = iteration.particles["beam"];
-
-        auto const numParticleOnTile = pti.numParticles();
-        uint64_t const numParticleOnTile64 = static_cast<uint64_t>( numParticleOnTile );
-
-        // Do not call storeChunk() with zero-sized particle tiles:
-        //   https://github.com/openPMD/openPMD-api/issues/1147
-        //if (numParticleOnTile == 0) continue;
-
-        auto const scalar = openPMD::RecordComponent::SCALAR;
-        auto const getComponentRecord = [&beam](std::string const comp_name) {
-            return detail::get_component_record(beam, comp_name);
-        };
-
-        // AoS: position and particle ID
-        {
-            using vs = std::vector<std::string>;
-            vs const positionComponents{"x", "y", "t"}; // TODO: generalize
-            for (auto currDim = 0; currDim < AMREX_SPACEDIM; currDim++) {
-                std::shared_ptr<amrex::ParticleReal> const curr(
-                    new amrex::ParticleReal[numParticleOnTile],
-                    [](amrex::ParticleReal const *p) { delete[] p; }
-                );
-                for (auto i = 0; i < numParticleOnTile; i++) {
-                    curr.get()[i] = aos[i].pos(currDim);
-                }
-                std::string const positionComponent = positionComponents[currDim];
-                beam["position"][positionComponent].storeChunk(curr, {offset},
-                                                               {numParticleOnTile64});
-            }
-
-            // save particle ID after converting it to a globally unique ID
-            std::shared_ptr<uint64_t> const ids(
-                new uint64_t[numParticleOnTile],
-                [](uint64_t const *p) { delete[] p; }
-            );
-            for (auto i = 0; i < numParticleOnTile; i++) {
-                ids.get()[i] = ablastr::particles::localIDtoGlobal(aos[i].id(), aos[i].cpu());
-            }
-            beam["id"][scalar].storeChunk(ids, {offset}, {numParticleOnTile64});
-        }
-
-        // SoA: everything else
-        auto const& soa = pti.GetStructOfArrays();
-        //   SoA floating point (ParticleReal) properties
-        {
-            std::vector<std::string> real_soa_names(RealSoA::names_s.size());
-            std::copy(RealSoA::names_s.begin(), RealSoA::names_s.end(), real_soa_names.begin());
-
-            for (auto real_idx=0; real_idx < RealSoA::nattribs; real_idx++) {
-                auto const component_name = real_soa_names.at(real_idx);
-                getComponentRecord(component_name).storeChunkRaw(
-                soa.GetRealData(real_idx).data(), {offset}, {numParticleOnTile64});
-            }
-        }
-        //   SoA integer (int) properties (not yet used)
-        {
-            static_assert(IntSoA::nattribs == 0); // not yet used
-        }
-
-        // TODO
-        amrex::ignore_unused(ref_part);
-
-        // needs to be higher for next pti; must be reset for next step via prepare
-        offset += numParticleOnTile64;
-
-        // TODO could be done once after all pti are processed
-        // TODO at that point, we could also close the iteration/step
-        series.flush();
-#else
-        amrex::ignore_unused(pti, ref_part);
-#endif
-    }
-*/
 } // namespace impactx::diagnostics

@@ -124,9 +124,7 @@ class AMReXWithOpenPMD
 public:
   AMReXWithOpenPMD();
 
-    //AMReXWithOpenPMD(AMReXWithOpenPMD const & other) = default;
   AMReXWithOpenPMD (AMReXWithOpenPMD && other) = default;
-    //AMReXWithOpenPMD& operator= (AMReXWithOpenPMD const & other) = default;
   AMReXWithOpenPMD& operator= (AMReXWithOpenPMD && other) = default;
 
   ~AMReXWithOpenPMD();
@@ -170,17 +168,6 @@ private:
         BeamMonitor& operator= (BeamMonitor const & other) = default;
         BeamMonitor& operator= (BeamMonitor && other) = default;
 
-        /** Prepare entering the element before starting push logic.
-         *
-         * @param[in] pc particle container
-         * @param[in] ref_part reference particle
-         * @param[in] step global step for diagnostics
-         */
-        void prepare (
-            PinnedContainer & pc,
-            RefPart const & ref_part,
-            int step
-        );
 
         /** Dump all particles.
          *
@@ -194,13 +181,6 @@ private:
             int step
         );
 
-      /*
-        // TODO: move to private function
-        void operator() (
-            PinnedContainer::ParIterType & pti,
-            RefPart const & ref_part
-        );
-      */
         /** This does nothing to the reference particle. */
         using Thin::operator();
 
@@ -219,7 +199,6 @@ private:
       //std::unique_ptr< AMReXWithOpenPMD > m_Writer = std::make_unique< AMReXWithOpenPMD >();
       void*  m_plotWriter = NULL;
       //std::unique_ptr< AMReXWithOpenPMD > m_Writer;
-      //std::any  m_Writer;
 
       //int m_file_min_digits = 6; //! minimum number of digits to iteration number in file name
     };
