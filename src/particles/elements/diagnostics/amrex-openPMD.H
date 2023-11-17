@@ -184,21 +184,15 @@ private:
         /** This does nothing to the reference particle. */
         using Thin::operator();
 
-        /** track all m_series_name instances
-         *
-         * Ensure m_series is the same for the same name.
-         */
-      // static inline std::map<std::string, std::any> m_unique_series = {};
-
         /** Close and deallocate all data series and backends.
          */
         void
         finalize ();
 
     private:
-      //std::unique_ptr< AMReXWithOpenPMD > m_Writer = std::make_unique< AMReXWithOpenPMD >();
+      std::string m_seriesName;
       void*  m_plotWriter = NULL;
-      //std::unique_ptr< AMReXWithOpenPMD > m_Writer;
+      static inline std::map<std::string, void*> m_uniqueWriter = {};
 
       //int m_file_min_digits = 6; //! minimum number of digits to iteration number in file name
     };

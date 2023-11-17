@@ -69,7 +69,6 @@ private:
 
   AMReXWithOpenPMD::~AMReXWithOpenPMD()
 {
-  amrex::Print()<<" openpmd_api::close handler "<<m_Prefix<<" \n";
   amrex::openpmd_api::CloseUserHandler(m_UserHandler);
 }
 
@@ -91,11 +90,17 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
   //
     void BeamMonitor::finalize ()
     {
+      BL_PROFILE("BeamMonitor::finalize()")
+      if (m_uniqueWriter.count(m_seriesName) == 0u)
+	return;
+
       if (m_plotWriter != NULL) {
 	auto m_Writer = (AMReXWithOpenPMD*)(m_plotWriter);
 	delete m_Writer;
       }
       amrex::Print()<<" => [check]: is things in BeamMonitor::finalize() addressed? \n";
+      m_uniqueWriter.erase(m_seriesName);
+
       /*
         // close shared series alias
         if (m_series.has_value())
@@ -112,7 +117,15 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
     }
 
     BeamMonitor::BeamMonitor (std::string series_name, std::string backend, std::string encoding)
+      :m_seriesName(std::move(series_name))
     {
+      BL_PROFILE("BeamMonitor::BeamMonitor()")
+      if (m_uniqueWriter.count(m_seriesName) > 0u)
+	{
+	  m_plotWriter = m_uniqueWriter[m_seriesName];
+	}
+      else
+	{
       auto m_Writer =  new AMReXWithOpenPMD();
 #ifdef ImpactX_USE_OPENPMD
         // encoding of iterations in the series
@@ -124,7 +137,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         else if ( "f" == encoding )
             series_encoding = openPMD::IterationEncoding::fileBased;
 
-	if ( m_Writer->InitLocalHandler(series_name) )
+	if ( m_Writer->InitLocalHandler(m_seriesName) )
 	  {
 	    AMReX_impactxWriter* testWriter = new AMReX_impactxWriter(series_encoding);
 	    m_Writer->SetWriter(testWriter);
@@ -133,6 +146,8 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         amrex::AllPrint() << "Warning: openPMD output requested but not compiled for series=" << m_series_name << "\n";
 #endif
 	m_plotWriter = m_Writer;
+	m_uniqueWriter[m_seriesName] = m_plotWriter;
+	}// else
     }
 
   #ifdef NEVER
@@ -167,6 +182,7 @@ bool AMReXWithOpenPMD::InitLocalHandler(const std::string& prefix)
         int step
     )
     {
+      BL_PROFILE("BeamMonitor::(pc, step)")
         // preparing to access reference particle data: RefPart
         RefPart & ref_part = pc.GetRefParticle();
 
